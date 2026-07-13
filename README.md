@@ -1,65 +1,53 @@
 # Churn Radar — Customer Churn Prediction Dashboard
 
-Full-stack churn prediction platform: an XGBoost model scores every customer daily,
-explains *why* with SHAP, and drives a rule-based intervention queue — built end-to-end
-with FastAPI, Next.js, and a real ML pipeline (not a notebook demo).
+An end-to-end churn-prediction platform where an XGBoost model scores every customer each day, uses SHAP to spell out *why* each one is at risk, and feeds a rule-based queue of recommended interventions. It's a real ML system wired together with FastAPI and Next.js — a working pipeline, not a notebook walkthrough.
 
-Trained on the [IBM Telco Customer Churn](https://www.kaggle.com/datasets/blastchar/telco-customer-churn)
-dataset (7,043 customers) — **ROC-AUC 0.84**.
+Trained on the [IBM Telco Customer Churn](https://www.kaggle.com/datasets/blastchar/telco-customer-churn) dataset (7,043 customers), reaching a **ROC-AUC of 0.84**.
 
-## Highlights
+## What makes it real
 
-- **Real ML, not a toy model** — XGBoost in a scikit-learn `Pipeline`, evaluated with
-  ROC-AUC / F1 / precision / recall, versioned and retrainable from the UI in one click.
-- **Explainable, not a black box** — per-customer SHAP contributions precomputed at
-  scoring time, ranked and shown in plain language on every customer's page.
-- **Automated, not manual** — APScheduler re-scores the entire customer base every night
-  at midnight; a rules engine turns risk tier into a concrete next action automatically.
-- **Auditable** — every score and every intervention (pending/actioned/dismissed) is
-  logged to SQLite, so nothing the dashboard shows is a black box after the fact.
+- **An actual model, not a toy** — XGBoost inside a scikit-learn `Pipeline`, measured on ROC-AUC / F1 / precision / recall, version-tracked, and retrainable straight from the UI with one click.
+- **Transparent, not a black box** — each prediction carries per-customer SHAP contributions, computed during scoring, ranked, and rewritten in plain language on every customer's page.
+- **Hands-off, not manual** — APScheduler re-scores the entire customer base every night at midnight, and a rules engine converts each risk tier into a concrete next action on its own.
+- **Fully traceable** — every score and every intervention (pending / actioned / dismissed) is recorded in SQLite, so nothing the dashboard displays is left unexplained later.
 
 ---
 ## Demo
 
-<video src="https://github.com/user-attachments/assets/ca71d68d-e03d-4d8c-af15-89f6ce7ce766
-" controls autoplay loop muted width="100%">
-  Your browser does not support the video tag.
-</video>
-
-Screen recording (no audio): Navigating the high-level KPI dashboard, analyzing SHAP-driven risk factors for an individual customer, filtering the customer queue, and inspecting ML model evaluation metrics.
+https://www.loom.com/share/d31f86ba00314833a6fdddd66cc99d51
 
 ## Screenshots
 
-**Dashboard** — portfolio-level KPIs, risk distribution, 30-day churn trend, top-risk queue
+**Dashboard** — portfolio-wide KPIs, risk distribution, a 30-day churn trend, and the top-risk queue
 ![Dashboard](screenshots/dashboard.png)
 
-**Customer detail** — SHAP-driven "why this customer is at risk," ranked and explained
+**Customer detail** — a SHAP-backed breakdown of "why this customer is at risk," ranked and explained
 ![Customer detail](screenshots/customer-detail.png)
 
-**Customers** — searchable, filterable, sortable table across all 7,043 customers
+**Customers** — a searchable, filterable, sortable table spanning all 7,043 customers
 ![Customers list](screenshots/customers-list.png)
 
 **Interventions** — the action queue a CS team actually works from
 ![Interventions](screenshots/interventions.png)
 
-**Model performance** — ROC-AUC / F1 / precision / recall, feature importance, one-click retrain
+**Model performance** — ROC-AUC / F1 / precision / recall, feature importance, and one-click retraining
 ![Model performance](screenshots/model-performance.png)
 
 ---
 
-## Page tour
+## The pages
 
-| Page | What it shows |
+| Page | What you'll find |
 |------|---------------|
-| **Dashboard** (`/`) | KPI cards, risk-distribution donut, 30-day churn trend, top-10 risky customers, recent interventions |
-| **Customers** (`/customers`) | Searchable, filterable, sortable, paginated table of all 7,043 customers |
-| **Customer detail** (`/customers/[id]`) | Churn score, per-customer SHAP drivers, score history, recommendation, intervention log |
-| **Interventions** (`/interventions`) | All triggered interventions, filter by status, mark actioned / dismissed |
-| **Model** (`/model`) | ROC-AUC / F1 / precision / recall, global feature importance, retrain button |
+| **Dashboard** (`/`) | KPI cards, a risk-distribution donut, a 30-day churn trend, the ten riskiest customers, and recent interventions |
+| **Customers** (`/customers`) | A searchable, filterable, sortable, paginated table of all 7,043 customers |
+| **Customer detail** (`/customers/[id]`) | Churn score, per-customer SHAP drivers, score history, a recommendation, and the intervention log |
+| **Interventions** (`/interventions`) | Every triggered intervention, filterable by status, with mark-actioned / dismiss controls |
+| **Model** (`/model`) | ROC-AUC / F1 / precision / recall, global feature importance, and a retrain button |
 
 ---
 
-## Architecture
+## How it's wired
 
 ```
                           ┌──────────────────────────────────────────┐
@@ -93,27 +81,18 @@ Screen recording (no audio): Navigating the high-level KPI dashboard, analyzing 
                      └────────────────────────┘
 ```
 
-**Tech stack:** Next.js 14 · Tailwind CSS · Recharts · FastAPI · SQLAlchemy · SQLite ·
-XGBoost · scikit-learn · SHAP · pandas · APScheduler.
+**Tech stack:** Next.js 14 · Tailwind CSS · Recharts · FastAPI · SQLAlchemy · SQLite · XGBoost · scikit-learn · SHAP · pandas · APScheduler.
 
-### Design decisions
+### Why it's built this way
 
-- **SHAP is precomputed at scoring time, not on page load.** Explaining a prediction is
-  more expensive than making one; batching it into the nightly job keeps every customer
-  page instant instead of running live inference on every click.
-- **The intervention rules are separate from the model.** Risk tier → recommended action
-  is a small, explicit rules file, not something baked into the model. A business
-  stakeholder can change what "High risk" means to do without anyone retraining anything.
-- **Training and scoring share one `Pipeline` object.** Preprocessing (scaling, one-hot
-  encoding) is fit once during training and serialized with the model, so there's no way
-  for train/serve preprocessing to drift out of sync.
-- **Re-scoring is idempotent for interventions.** A customer already sitting in a pending
-  intervention doesn't get a duplicate one every night — only genuinely new risk creates
-  a new action.
+- **SHAP runs at scoring time, not on page load.** Explaining a prediction costs more than producing one, so folding that work into the nightly batch keeps every customer page instant instead of doing live inference on each visit.
+- **Intervention rules live outside the model.** The mapping from risk tier to recommended action is a small, explicit rules file rather than something learned by the model — a business stakeholder can redefine what "High risk" should trigger without anyone retraining a thing.
+- **Training and scoring reuse the same `Pipeline`.** Scaling and one-hot encoding are fit once during training and serialized alongside the model, which removes any chance of train/serve preprocessing drifting apart.
+- **Re-scoring won't pile up duplicate interventions.** A customer who already has a pending intervention won't get a fresh one every night — only genuinely new risk produces a new action.
 
 ---
 
-## Project structure
+## Repo layout
 
 ```
 backend/
@@ -145,12 +124,11 @@ README.md
 
 ---
 
-## Setup & run
+## Getting it running
 
-### Prerequisites
+### What you need
 - Python 3.9+ and Node.js 18+
-- (Optional) a Kaggle account for the real dataset — otherwise a realistic synthetic
-  dataset with the identical schema is generated automatically.
+- (Optional) a Kaggle account for the real dataset — without one, a realistic synthetic dataset sharing the exact schema is generated for you.
 
 ### 1. Backend
 
@@ -167,7 +145,7 @@ python -m db.seed                   # create churn.db, score 7,043 customers, se
 uvicorn main:app --reload --port 8020
 ```
 
-The API is now at **http://127.0.0.1:8020** (interactive docs at `/docs`).
+The API now lives at **http://127.0.0.1:8020** (interactive docs at `/docs`).
 
 ### 2. Frontend
 
@@ -178,39 +156,34 @@ cp .env.example .env.local          # NEXT_PUBLIC_API_BASE=http://127.0.0.1:8020
 npm run dev
 ```
 
-Open **http://localhost:3000**.
+Then open **http://localhost:3000**.
 
 ---
 
-## Downloading the dataset via the Kaggle API
+## Pulling the dataset through the Kaggle API
 
-1. Create a Kaggle API token: **kaggle.com → Account → Settings → Create New Token**.
-   This downloads a `kaggle.json` containing your `username` and `key`.
-2. Put the credentials in `backend/.env`:
+1. Generate a Kaggle API token: **kaggle.com → Account → Settings → Create New Token**. That gives you a `kaggle.json` holding your `username` and `key`.
+2. Drop the credentials into `backend/.env`:
 
    ```env
    KAGGLE_USERNAME=your_kaggle_username
    KAGGLE_KEY=your_kaggle_key
    ```
-3. `python -m ml.train` (or `python -m ml.dataset --download`) will then run the
-   equivalent of:
+3. `python -m ml.train` (or `python -m ml.dataset --download`) then performs the equivalent of:
 
    ```bash
    kaggle datasets download -d blastchar/telco-customer-churn
    ```
 
-   and unzip it to `data/telco_churn.csv`.
+   and unzips it to `data/telco_churn.csv`.
 
-> **No Kaggle account?** No problem — if credentials are missing or offline, the loader
-> automatically generates a synthetic 7,043-row dataset with the exact Telco schema and
-> realistic churn relationships, so the app runs end-to-end without any external calls.
+> **No Kaggle account?** That's fine — when credentials are absent or you're offline, the loader builds a synthetic 7,043-row dataset with the exact Telco schema and believable churn relationships, so the whole app runs without a single external call.
 
 ---
 
-## Manually triggering scoring & retraining
+## Kicking off scoring and retraining by hand
 
-**From the UI:** the Dashboard has a **“Run scoring now”** button; the Model page has a
-**“Retrain model”** button (with a confirmation modal).
+**From the UI:** the Dashboard has a **"Run scoring now"** button, and the Model page has a **"Retrain model"** button (behind a confirmation modal).
 
 **From the API:**
 
@@ -231,22 +204,19 @@ python -m ml.score          # score all customers in the DB
 python -m scheduler         # run the daily scoring job once, on demand
 ```
 
-**Automatically:** APScheduler runs the scoring pipeline every day at **00:00 UTC** while
-the FastAPI server is running.
+**Automatically:** while the FastAPI server is up, APScheduler fires the scoring pipeline every day at **00:00 UTC**.
 
 ---
 
-## How scoring & interventions work
+## How risk scoring and interventions work
 
 - **Risk tiers:** Low `0–30%`, Medium `30–60%`, High `60–100%` churn probability.
-- **Per-customer drivers:** at scoring time we precompute each customer's top churn
-  drivers using XGBoost SHAP contributions and store them on the row — so the detail page
-  is instant, never computing on demand.
+- **Per-customer drivers:** during scoring we precompute each customer's leading churn drivers from XGBoost SHAP contributions and store them on the row — which is what keeps the detail page instant rather than computing on demand.
 - **Intervention rules:**
-  - **High (>60%)** → flag for immediate outreach + suggest a personalized retention discount.
-  - **Medium (30–60%)** → suggest a check-in call + highlight unused features.
+  - **High (>60%)** → flag for immediate outreach and suggest a personalized retention discount.
+  - **Medium (30–60%)** → propose a check-in call and surface unused features.
   - **Low (<30%)** → monitor only, no action.
-  - Re-scoring never creates duplicate open interventions for the same customer.
+  - Re-scoring never opens a duplicate intervention for the same customer.
 
 ---
 
@@ -267,18 +237,12 @@ the FastAPI server is running.
 
 ---
 
-## Example use cases
+## Who uses it, and how
 
-- **Customer Success Manager** opens the Dashboard each morning, sees the 1,000+ high-risk
-  accounts, and works the **Interventions** queue — calling flagged customers and marking
-  each one *actioned*.
-- **Business owner** checks the 30-day churn trend and risk-distribution donut to gauge
-  whether retention is improving, without needing to read any code or SQL.
-- **Ops / analyst** opens a customer's detail page before a renewal call to see exactly
-  *which factors* (month-to-month contract, no tech support, high monthly charges…) are
-  driving that account's risk, and follows the recommended action.
-- **Data owner** retrains the model from the Model page after new data lands and confirms
-  ROC-AUC / precision / recall are still healthy.
+- A **Customer Success Manager** opens the Dashboard each morning, sees the 1,000+ high-risk accounts, and works the **Interventions** queue — calling flagged customers and marking each one *actioned*.
+- A **business owner** glances at the 30-day churn trend and the risk-distribution donut to judge whether retention is improving — no code or SQL required.
+- An **ops analyst** pulls up a customer's detail page ahead of a renewal call to see exactly *which factors* (month-to-month contract, no tech support, high monthly charges…) are pushing that account's risk, then follows the recommended action.
+- A **data owner** retrains the model from the Model page after fresh data arrives and confirms ROC-AUC / precision / recall are still healthy.
 
 ---
 
