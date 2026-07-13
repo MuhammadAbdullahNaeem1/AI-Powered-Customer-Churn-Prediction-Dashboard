@@ -13,8 +13,7 @@ Trained on the [IBM Telco Customer Churn](https://www.kaggle.com/datasets/blastc
 
 ---
 ## Demo
-
-https://www.loom.com/share/d31f86ba00314833a6fdddd66cc99d51
+https://github.com/user-attachments/assets/4c453071-048c-4f2c-84b6-2be19e66d7de
 
 ## Screenshots
 
