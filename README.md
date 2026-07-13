@@ -1,4 +1,4 @@
-# Churn Radar — Customer Churn Prediction Dashboard
+# AI-Powered Customer Churn Prediction Dashboard
 
 An end-to-end churn-prediction platform where an XGBoost model scores every customer each day, uses SHAP to spell out *why* each one is at risk, and feeds a rule-based queue of recommended interventions. It's a real ML system wired together with FastAPI and Next.js — a working pipeline, not a notebook walkthrough.
 
